@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  db:
+    # Using postgres:16 as 'postgres:18' is not yet available.
+    image: postgres:16-alpine
+    container_name: postgres-db
+    restart: always
+    # Use the provided .env file for DB credentials
+    env_file:
+      - debug.env
+    environment:
+      # Set PGDATA to the *exact* (though unusual) path from the exercise prompt
+      PGDATA: /var/lib/postgresql/18/docker
+    volumes:
+      # Map the named volume to the *exact* path from the prompt for persistence
+      - order-db-data:/var/lib/postgresql/18/docker
+    ports:
+      # Map host port 5432 to container port 5432
+      - "5432:5432"
+    networks:
+      - order-network
+
+  app:
+    # Build the 'orderservice' image using the Dockerfile in the current directory
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orderservice-app
+    restart: always
+    env_file:
+      - debug.env # Load all envs from the file
+    environment:
+      # Override DB_HOST to use the service name 'db',
+      # which Docker Compose automatically resolves.
+      DB_HOST: db
+    ports:
+      - "3000:3000" # Map host port 3000 to container port 3000
+    networks:
+      - order-network
+    depends_on:
+      - db # Ensures the 'db' container starts before the 'app' container
+
+# Define the persistent volume
+volumes:
+  order-db-data:
+    name: order-db-data
+
+# Define the shared network
+networks:
+  order-network:
+    name: order-network
