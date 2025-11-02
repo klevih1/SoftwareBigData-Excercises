@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # 1. Database Service
+  order-db:
+    image: postgres:16-alpine
+    container_name: ex4-postgres-db
+    restart: always
+    environment:
+      POSTGRES_DB: order
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      PGDATA: /var/lib/postgresql/18/docker
+    volumes:
+      - ex4-db-data:/var/lib/postgresql/18/docker
+    ports:
+      - "5432:5432"
+    networks:
+      - ex4-internal-network
+
+  # 2. Application Service
+  order-web-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ex4-orderservice-app
+    restart: always
+
+    environment:
+      DB_HOST: order-db
+      POSTGRES_DB: order
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      POSTGRES_TCP_PORT: 5432
+    ports:
+      - "3000:3000"
+    networks:
+      - ex4-internal-network
+    depends_on:
+      - order-db
+
+volumes:
+  ex4-db-data:
+    name: ex4-db-data
+
+networks:
+  ex4-internal-network:
+    name: ex4-internal-network# todo
