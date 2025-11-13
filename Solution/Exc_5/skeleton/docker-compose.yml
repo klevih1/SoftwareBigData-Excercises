@@ -14,22 +14,15 @@ services:
     container_name: traefik
     restart: unless-stopped
     command:
-        # Enable Docker integration
       - --providers.docker=true
-        # Watch only the 'web' network for services
       - --providers.docker.exposedbydefault=false
-        # Enable HTTP entrypoint on port 80
       - --entrypoints.web.address=:80
-        # Enable the dashboard (optional, but helpful for debugging)
       - --api.insecure=true
     # todo only expose network web
     ports:
-      # Expose port 80 for web traffic
       - "80:80"
-      # Expose port 8080 for the Traefik dashboard (optional)
       - "8080:8080"
     volumes:
-        # Map the Docker socket so Traefik can watch for new services/containers
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - web
@@ -45,14 +38,10 @@ services:
         condition: service_healthy
 
     # todo add traefik labels
-    # Traefik Labels: Define how Traefik should route traffic to this service
     labels:
       - "traefik.enable=true"
-        # Create a router named 'orders-router'
       - "traefik.http.routers.orders-router.rule=Host(`orders.localhost`)"
-        # Use the 'web' entrypoint (port 80)
       - "traefik.http.routers.orders-router.entrypoints=web"
-      # Tell Traefik what port the orderservice is running on inside its container
       - "traefik.http.services.orderservice.loadbalancer.server.port=3000"
     environment:
       - POSTGRES_DB=order
@@ -67,27 +56,17 @@ services:
   sws:
     image: joseluisq/static-web-server:latest
     # todo add frontend folder as volume
-    # Mount the local 'frontend' directory into the container's serve path
     volumes:
       - ./frontend:/public:ro
     # todo setup environment variables to expose port 80 and serve the frontend folder
     environment:
-      # sws serves content from /usr/share/nginx/html by default.
-      # Expose port 80 inside the container for the static server
       - SERVER_PORT=80
-      # You can optionally set the root path, but the volume mount above handles it
-      # - SERVER_ROOT=/usr/share/nginx/html
     # todo add traefik labels
-    # Traefik Labels: Define how Traefik should route traffic to this service
     labels:
       - "traefik.enable=true"
-      # Create a router named 'frontend-router'
       - "traefik.http.routers.frontend-router.rule=Host(`localhost`)"
-      # Use the 'web' entrypoint (port 80)
       - "traefik.http.routers.frontend-router.entrypoints=web"
-      # Tell Traefik what port the sws server is running on inside its container
       - "traefik.http.services.sws.loadbalancer.server.port=80"
-    # SWS only needs to be on the 'web' network to be found by Traefik
     networks:
       - web
 

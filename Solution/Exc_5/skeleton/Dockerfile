@@ -1,7 +1,6 @@
 FROM golang:1.25 AS builder
 WORKDIR /app
 COPY . .
-
 RUN chmod +x /app/scripts/build-application.sh
 RUN /app/scripts/build-application.sh
 
