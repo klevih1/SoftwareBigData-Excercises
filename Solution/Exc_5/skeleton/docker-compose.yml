@@ -18,6 +18,7 @@ services:
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
       - --api.insecure=true
+      - --providers.docker.network=web
     # todo only expose network web
     ports:
       - "80:80"
